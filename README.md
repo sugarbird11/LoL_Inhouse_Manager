@@ -15,8 +15,20 @@
 3. migrate 실행
 4. runserver 실행
 
-## 설치
-```bash
+### Windows
+```cmd
+python -m venv venv
+venv\Scripts\activate.bat
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
+```
+
+### macOS
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
