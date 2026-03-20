@@ -31,3 +31,13 @@ python project/manage.py migrate
 echo "[INFO] 서버를 실행합니다..."
 echo "[INFO] 브라우저에서 http://127.0.0.1:8000/ 로 접속하세요."
 python project/manage.py runserver
+
+# 브라우저에서 lobbies 페이지 열기
+LOBBY_URL="http://127.0.0.1:8000/lobbies"
+
+if command -v open >/dev/null 2>&1; then
+  echo "[INFO] 브라우저에서 ${LOBBY_URL} 를 엽니다."
+  open "${LOBBY_URL}" >/dev/null 2>&1 || echo "[WARN] 브라우저를 자동으로 열지 못했습니다. 직접 접속하세요: ${LOBBY_URL}"
+else
+  echo "[WARN] 'open' 명령을 찾지 못했습니다. 직접 접속하세요: ${LOBBY_URL}"
+fi
