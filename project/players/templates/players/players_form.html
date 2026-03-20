@@ -1,0 +1,87 @@
+{% extends "players/base.html" %}
+
+{% block title %}
+    {% if object %}플레이어 수정{% else %}플레이어 등록{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h2 mb-1">
+        {% if object %}
+            플레이어 정보 수정
+        {% else %}
+            플레이어 등록
+        {% endif %}
+    </h1>
+    <p class="text-muted mb-0">소환사명, 파워 스코어, 주/부 포지션을 입력하세요.</p>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="{{ form.player_id.id_for_label }}" class="form-label">소환사명</label>
+                {{ form.player_id }}
+                {% if form.player_id.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.player_id.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.player_power_score.id_for_label }}" class="form-label">파워 스코어</label>
+                {{ form.player_power_score }}
+                {% if form.player_power_score.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.player_power_score.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.player_main_position.id_for_label }}" class="form-label">주 포지션</label>
+                {{ form.player_main_position }}
+                {% if form.player_main_position.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.player_main_position.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.player_secondary_position.id_for_label }}" class="form-label">부 포지션</label>
+                {{ form.player_secondary_position }}
+                {% if form.player_secondary_position.errors %}
+                <div class="text-danger small mt-1">
+                    {% for error in form.player_secondary_position.errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">저장</button>
+                <a href="{% url 'players:player_list' %}" class="btn btn-outline-secondary">취소</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

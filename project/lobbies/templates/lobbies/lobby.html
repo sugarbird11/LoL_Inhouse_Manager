@@ -1,0 +1,395 @@
+{% extends "players/base.html" %}
+
+{% block title %}내전 로비{% endblock %}
+
+{% block content %}
+<style>
+    .team-dropzone {
+        min-height: 420px;
+        background: #f8f9fa;
+        border: 2px dashed #cfd4da;
+        border-radius: 16px;
+        padding: 1rem;
+    }
+
+    .team-dropzone.drag-over {
+        background: #eef6ff;
+        border-color: #0d6efd;
+    }
+
+    .player-card {
+        border: 1px solid #dee2e6;
+        border-radius: 14px;
+        background: #fff;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        cursor: grab;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .player-card:active {
+        cursor: grabbing;
+    }
+
+    .player-card.dragging {
+        opacity: 0.45;
+    }
+
+    .participant-list-box {
+        max-height: 340px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        background: #fff;
+        padding: 0.75rem;
+    }
+
+    .participant-item {
+        border-bottom: 1px solid #f1f3f5;
+        padding: 0.5rem 0.25rem;
+    }
+
+    .participant-item:last-child {
+        border-bottom: 0;
+    }
+
+    .small-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">팀 구성</h1>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} shadow-sm">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="post" id="lobbyForm">
+    {% csrf_token %}
+
+    <input type="hidden" name="action" id="actionInput">
+    <input type="hidden" name="team1_ids_json" id="team1IdsInput">
+    <input type="hidden" name="team2_ids_json" id="team2IdsInput">
+    <input type="hidden" name="position_map_json" id="positionMapInput">
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">팀 1</h2>
+                        <div class="text-muted small">PS: {{ team1_score_total }}</div>
+                    </div>
+
+                    <div class="team-dropzone" id="team1Zone" data-team="1">
+                        {% for player in team1_cards %}
+                            <div class="player-card"
+                                 draggable="{% if player.is_locked %}false{% else %}true{% endif %}"
+                                 data-player-id="{{ player.id }}">
+                                 
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <div class="form-check mt-1">
+                                            <input
+                                                class="form-check-input lock-checkbox"
+                                                type="checkbox"
+                                                name="locked_players"
+                                                value="{{ player.id }}"
+                                                {% if player.is_locked %}checked{% endif %}
+                                            >
+                                        </div>
+
+                                        <div>
+                                            <div class="fw-semibold">{{ player.name }}</div>
+                                            <div class="small-meta">
+                                                PS {{ player.score }} · 주 {{ player.main_position }} / 부 {{ player.secondary_position }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="min-width: 110px;">
+                                        <select class="form-select form-select-sm position-select"
+                                                data-player-id="{{ player.id }}">
+                                            {% for value, label in position_choices %}
+                                                <option value="{{ value }}"
+                                                    {% if player.selected_position == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-muted">아직 팀 1에 배정된 인원이 없습니다.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">팀 2</h2>
+                        <div class="text-muted small">PS: {{ team2_score_total }}</div>
+                    </div>
+
+                    <div class="team-dropzone" id="team2Zone" data-team="2">
+                        {% for player in team2_cards %}
+                            <div class="player-card"
+                                 draggable="{% if player.is_locked %}false{% else %}true{% endif %}"
+                                 data-player-id="{{ player.id }}">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <div class="form-check mt-1">
+                                            <input
+                                                class="form-check-input lock-checkbox"
+                                                type="checkbox"
+                                                name="locked_players"
+                                                value="{{ player.id }}"
+                                                {% if player.is_locked %}checked{% endif %}
+                                            >
+                                        </div>
+
+                                        <div>
+                                            <div class="fw-semibold">{{ player.name }}</div>
+                                            <div class="small-meta">
+                                                PS {{ player.score }} · 주 {{ player.main_position }} / 부 {{ player.secondary_position }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="min-width: 110px;">
+                                        <select class="form-select form-select-sm position-select"
+                                                data-player-id="{{ player.id }}">
+                                            {% for value, label in position_choices %}
+                                                <option value="{{ value }}"
+                                                    {% if player.selected_position == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-muted">아직 팀 2에 배정된 인원이 없습니다.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <button type="submit"
+                class="btn btn-outline-secondary"
+                onclick="prepareSubmit('save_layout')">
+            현재 배치 저장
+        </button>
+
+        <button type="submit"
+                class="btn btn-primary"
+                onclick="prepareSubmit('auto_assign')">
+            자동 팀 배정
+        </button>
+
+        <a href="{% url 'matches:match_upload' %}?from_lobby=1" class="btn btn-success">
+            경기 결과 업로드
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h4 mb-1">참가자 선택</h2>
+                    <p class="text-muted mb-0">정확히 10명을 선택한 뒤 등록하세요.</p>
+                </div>
+                <div style="width: 320px; max-width: 100%;">
+                    <input type="text"
+                           id="playerSearchInput"
+                           class="form-control"
+                           placeholder="소환사명 검색">
+                </div>
+            </div>
+
+            <div class="participant-list-box" id="participantListBox">
+                {% for player in selected_players %}
+                    <div class="participant-item participant-row"
+                         data-player-name="{{ player.player_id|lower }}">
+                        <label class="form-check d-flex justify-content-between align-items-center">
+                            <span>
+                                <input class="form-check-input me-2 participant-checkbox"
+                                       type="checkbox"
+                                       name="selected_players"
+                                       value="{{ player.key }}"
+                                       checked>
+                                <span class="fw-semibold">{{ player.player_id }}</span>
+                            </span>
+                            <span class="small-meta">
+                                PS {{ player.player_power_score }} · {{ player.get_player_main_position_display }}/{{ player.get_player_secondary_position_display }}
+                            </span>
+                        </label>
+                    </div>
+                {% endfor %}
+
+                {% for player in available_players %}
+                    <div class="participant-item participant-row"
+                         data-player-name="{{ player.player_id|lower }}">
+                        <label class="form-check d-flex justify-content-between align-items-center">
+                            <span>
+                                <input class="form-check-input me-2 participant-checkbox"
+                                       type="checkbox"
+                                       name="selected_players"
+                                       value="{{ player.key }}">
+                                <span class="fw-semibold">{{ player.player_id }}</span>
+                            </span>
+                            <span class="small-meta">
+                                PS {{ player.player_power_score }} · {{ player.get_player_main_position_display }}/{{ player.get_player_secondary_position_display }}
+                            </span>
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                <div class="text-muted">
+                    현재 선택 인원: <span id="selectedCount">{{ selected_player_ids|length }}</span> / 10
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success"
+                        onclick="prepareSubmit('update_selection')">
+                    참가자 등록
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    let draggedCard = null;
+
+    function setupDragAndDrop() {
+        const cards = document.querySelectorAll('.player-card');
+        const zones = document.querySelectorAll('.team-dropzone');
+
+        cards.forEach(card => {
+            card.addEventListener('dragstart', (event) => {
+                draggedCard = card;
+                card.classList.add('dragging');
+                event.dataTransfer.setData('text/plain', card.dataset.playerId);
+                event.dataTransfer.dropEffect = 'move';
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                draggedCard = null;
+                zones.forEach(zone => zone.classList.remove('drag-over'));
+            });
+        });
+
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', (event) => {
+                event.preventDefault();
+                zone.classList.remove('drag-over');
+
+                if (!draggedCard) return;
+                zone.appendChild(draggedCard);
+                syncHiddenState();
+            });
+        });
+    }
+
+    function syncHiddenState() {
+        const team1Ids = Array.from(document.querySelectorAll('#team1Zone .player-card'))
+            .map(card => Number(card.dataset.playerId));
+
+        const team2Ids = Array.from(document.querySelectorAll('#team2Zone .player-card'))
+            .map(card => Number(card.dataset.playerId));
+
+        const positionMap = {};
+        document.querySelectorAll('.position-select').forEach(select => {
+            positionMap[String(select.dataset.playerId)] = select.value;
+        });
+
+        document.getElementById('team1IdsInput').value = JSON.stringify(team1Ids);
+        document.getElementById('team2IdsInput').value = JSON.stringify(team2Ids);
+        document.getElementById('positionMapInput').value = JSON.stringify(positionMap);
+
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const checkedCount = document.querySelectorAll('.participant-checkbox:checked').length;
+        document.getElementById('selectedCount').textContent = checkedCount;
+    }
+
+    function prepareSubmit(actionName) {
+        document.getElementById('actionInput').value = actionName;
+        syncHiddenState();
+    }
+
+    function setupSearch() {
+        const input = document.getElementById('playerSearchInput');
+        const rows = document.querySelectorAll('.participant-row');
+
+        input.addEventListener('input', () => {
+            const keyword = input.value.trim().toLowerCase();
+
+            rows.forEach(row => {
+                const playerName = row.dataset.playerName;
+                row.style.display = playerName.includes(keyword) ? '' : 'none';
+            });
+        });
+    }
+
+    function setupSelectionCounter() {
+        document.querySelectorAll('.participant-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+    }
+
+    function setupPositionChangeSync() {
+        document.querySelectorAll('.position-select').forEach(select => {
+            select.addEventListener('change', syncHiddenState);
+        });
+    }
+
+    function setupLockChangeSync() {
+        document.querySelectorAll('.lock-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', syncHiddenState);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setupDragAndDrop();
+        setupSearch();
+        setupSelectionCounter();
+        setupPositionChangeSync();
+        setupLockChangeSync();
+        syncHiddenState();
+    });
+</script>
+{% endblock %}

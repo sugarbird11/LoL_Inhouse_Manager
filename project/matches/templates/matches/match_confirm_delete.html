@@ -1,0 +1,29 @@
+{% extends "players/base.html" %}
+
+{% block title %}경기 삭제{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h3 text-danger mb-3">경기 삭제</h1>
+                <p class="mb-3">
+                    정말로 <strong>{{ match.match_id }}</strong> 경기를 삭제하시겠습니까?
+                </p>
+                <p class="text-muted">
+                    삭제하면 경기 상세 정보와 함께, 이 경기로 인해 반영된 승/패 및 PS 변화도 되돌립니다.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">삭제</button>
+                        <a href="{% url 'matches:match_detail' match.pk %}" class="btn btn-outline-secondary">취소</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "players/base.html" %}
+
+{% block title %}경기 목록{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">경기 목록</h1>
+        <p class="text-muted mb-0">저장된 경기 결과를 확인, 수정, 삭제할 수 있습니다.</p>
+    </div>
+    <a href="{% url 'matches:match_upload' %}" class="btn btn-primary">경기 결과 업로드</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if matches %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>경기 ID</th>
+                            <th>승리 팀</th>
+                            <th>레이팅 반영</th>
+                            <th>등록일</th>
+                            <th class="text-end">기능</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in matches %}
+                            <tr>
+                                <td class="fw-semibold">{{ match.match_id }}</td>
+                                <td>팀 {{ match.win_team }}</td>
+                                <td>
+                                    {% if match.is_rating_applied %}
+                                        <span class="badge text-bg-success">반영됨</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">미반영</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ match.created_at|date:"Y-m-d H:i" }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'matches:match_detail' match.pk %}" class="btn btn-sm btn-outline-primary">상세</a>
+
+                                    {% if match.pk == latest_match_pk %}
+                                        <a href="{% url 'matches:match_delete' match.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
+                                    {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger" disabled>삭제</button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0 text-muted">아직 저장된 경기 결과가 없습니다.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

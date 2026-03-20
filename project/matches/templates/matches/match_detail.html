@@ -1,0 +1,136 @@
+{% extends "players/base.html" %}
+
+{% block title %}경기 상세{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h2 mb-1">경기 상세</h1>
+        <p class="text-muted mb-0">경기 ID: {{ match.match_id }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if is_latest_match %}
+            <a href="{% url 'matches:match_delete' match.pk %}" class="btn btn-danger">경기 삭제</a>
+        {% else %}
+            <button type="button" class="btn btn-danger" disabled>경기 삭제</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">승리 팀</div>
+                <div class="fw-semibold">팀 {{ match.win_team }}</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">등록일</div>
+                <div class="fw-semibold">{{ match.created_at|date:"Y-m-d H:i" }}</div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-muted small">레이팅 반영 여부</div>
+                <div class="fw-semibold">
+                    {% if match.is_rating_applied %}
+                        반영됨
+                    {% else %}
+                        미반영
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if match.screenshot %}
+            <hr>
+            <div class="text-muted small mb-2">스크린샷</div>
+            <img src="{{ match.screenshot.url }}" alt="경기 결과 스크린샷" class="img-fluid rounded border">
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h2 class="h4 text-primary mb-3">팀 1</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>라인</th>
+                                <th>플레이어</th>
+                                <th>KDA</th>
+                                <th>골드</th>
+                                <th>PS 변동</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detail in team1_details %}
+                                <tr>
+                                    <td>{{ detail.get_player_selected_lane_display }}</td>
+                                    <td>{{ detail.player.player_id }}</td>
+                                    <td>{{ detail.player_kda }}</td>
+                                    <td>{{ detail.player_gold }}</td>
+                                    <td>
+                                        {% if detail.ps_delta > 0 %}
+                                            <span class="text-success fw-semibold">+{{ detail.ps_delta }}</span>
+                                        {% elif detail.ps_delta < 0 %}
+                                            <span class="text-danger fw-semibold">{{ detail.ps_delta }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h2 class="h4 text-danger mb-3">팀 2</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>라인</th>
+                                <th>플레이어</th>
+                                <th>KDA</th>
+                                <th>골드</th>
+                                <th>PS 변동</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detail in team2_details %}
+                                <tr>
+                                    <td>{{ detail.get_player_selected_lane_display }}</td>
+                                    <td>{{ detail.player.player_id }}</td>
+                                    <td>{{ detail.player_kda }}</td>
+                                    <td>{{ detail.player_gold }}</td>
+                                    <td>
+                                        {% if detail.ps_delta > 0 %}
+                                            <span class="text-success fw-semibold">+{{ detail.ps_delta }}</span>
+                                        {% elif detail.ps_delta < 0 %}
+                                            <span class="text-danger fw-semibold">{{ detail.ps_delta }}</span>
+                                        {% else %}
+                                            <span class="text-muted">0</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'matches:match_list' %}" class="btn btn-outline-secondary">목록으로</a>
+</div>
+{% endblock %}

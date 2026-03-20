@@ -1,0 +1,357 @@
+{% extends "players/base.html" %}
+
+{% block title %}경기 결과 업로드{% endblock %}
+
+{% block content %}
+<style>
+    .team-summary-card {
+        border-radius: 16px;
+        border: 0;
+    }
+
+    .team-summary-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .player-row-card {
+        border-radius: 14px;
+        border: 1px solid #dee2e6;
+        background: #fff;
+    }
+
+    .section-title {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .team-header-blue {
+        color: #0d6efd;
+        font-weight: 700;
+    }
+
+    .team-header-red {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .sticky-top-card {
+        position: sticky;
+        top: 1rem;
+        z-index: 10;
+    }
+
+    .compact-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.35rem;
+    }
+
+    .kda-input,
+    .gold-input {
+        text-align: center;
+    }
+
+    .team-column {
+        min-width: 0;
+    }
+</style>
+
+<div class="mb-4">
+    <h1 class="h2 mb-1">경기 결과 업로드</h1>
+    <p class="text-muted mb-0">경기 기본 정보를 입력하고, 팀 1 / 팀 2를 병렬로 확인하면서 상세 결과를 기록하세요.</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card shadow-sm border-0 mb-4 sticky-top-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h4 mb-1">경기 기본 정보</h2>
+                    <p class="text-muted mb-0">스크린샷 업로드 후 자동 결과 업로드를 실행할 수 있습니다.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="ocr_autofill" class="btn btn-outline-primary">
+                        자동 결과 업로드
+                    </button>
+                    <button type="submit" name="action" value="save_match" class="btn btn-primary">
+                        경기 결과 저장
+                    </button>
+                </div>
+            </div>
+
+            {{ match_form.temp_screenshot_path }}
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">{{ match_form.match_id.label }}</label>
+                    {{ match_form.match_id }}
+                    {% for error in match_form.match_id.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">{{ match_form.win_team.label }}</label>
+                    {{ match_form.win_team }}
+                    {% for error in match_form.win_team.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label">{{ match_form.screenshot.label }}</label>
+                    {{ match_form.screenshot }}
+                    {% for error in match_form.screenshot.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+<!--
+    {% if ocr_text %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">OCR 추출 결과</h2>
+                <pre class="bg-light p-3 rounded mb-0" style="white-space: pre-wrap;">{{ ocr_text }}</pre>
+            </div>
+        </div>
+    {% endif %}
+    -->
+    {{ detail_formset.management_form }}
+
+    <div class="row g-4">
+        <!-- 팀 1 -->
+        <div class="col-xl-6 team-column">
+            <div class="card shadow-sm team-summary-card border-0 mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="team-header-blue h4 mb-1">팀 1</div>
+                            <div class="text-muted">입력 중인 팀 1 결과 요약</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">팀 KDA</div>
+                            <div class="team-summary-value" id="team1-kda-summary">0 / 0 / 0</div>
+                            <div class="small text-muted mt-2">팀 골드</div>
+                            <div class="team-summary-value" id="team1-gold-summary">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+                {% for form in team1_forms %}
+                    <div class="player-row-card shadow-sm p-3">
+                        <div class="section-title">팀 1 - 플레이어 {{ forloop.counter }}</div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div class="compact-label">{{ form.player.label }}</div>
+                                {{ form.player }}
+                                {% for error in form.player.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="compact-label">{{ form.player_selected_lane.label }}</div>
+                                {{ form.player_selected_lane }}
+                                {% for error in form.player_selected_lane.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="compact-label">{{ form.player_team.label }}</div>
+                                {{ form.player_team }}
+                                {% for error in form.player_team.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="compact-label">{{ form.player_kda.label }}</div>
+                                {{ form.player_kda }}
+                                {% for error in form.player_kda.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="compact-label">{{ form.player_gold.label }}</div>
+                                {{ form.player_gold }}
+                                {% for error in form.player_gold.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 팀 2 -->
+        <div class="col-xl-6 team-column">
+            <div class="card shadow-sm team-summary-card border-0 mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="team-header-red h4 mb-1">팀 2</div>
+                            <div class="text-muted">입력 중인 팀 2 결과 요약</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">팀 KDA</div>
+                            <div class="team-summary-value" id="team2-kda-summary">0 / 0 / 0</div>
+                            <div class="small text-muted mt-2">팀 골드</div>
+                            <div class="team-summary-value" id="team2-gold-summary">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column gap-3">
+                {% for form in team2_forms %}
+                    <div class="player-row-card shadow-sm p-3">
+                        <div class="section-title">팀 2 - 플레이어 {{ forloop.counter }}</div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <div class="compact-label">{{ form.player.label }}</div>
+                                {{ form.player }}
+                                {% for error in form.player.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="compact-label">{{ form.player_selected_lane.label }}</div>
+                                {{ form.player_selected_lane }}
+                                {% for error in form.player_selected_lane.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="compact-label">{{ form.player_team.label }}</div>
+                                {{ form.player_team }}
+                                {% for error in form.player_team.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="compact-label">{{ form.player_kda.label }}</div>
+                                {{ form.player_kda }}
+                                {% for error in form.player_kda.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="compact-label">{{ form.player_gold.label }}</div>
+                                {{ form.player_gold }}
+                                {% for error in form.player_gold.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" name="action" value="save_match" class="btn btn-primary">
+            경기 결과 저장
+        </button>
+        <a href="{% url 'matches:match_list' %}" class="btn btn-outline-secondary">목록으로</a>
+    </div>
+</form>
+
+<script>
+    function parseKDA(value) {
+        const text = (value || "").trim();
+        const match = text.match(/^(\d+)\s*\/\s*(\d+)\s*\/\s*(\d+)$/);
+        if (!match) {
+            return { k: 0, d: 0, a: 0 };
+        }
+        return {
+            k: parseInt(match[1], 10) || 0,
+            d: parseInt(match[2], 10) || 0,
+            a: parseInt(match[3], 10) || 0,
+        };
+    }
+
+    function parseGold(value) {
+        const cleaned = String(value || "").replace(/,/g, "").trim();
+        const num = parseInt(cleaned, 10);
+        return Number.isNaN(num) ? 0 : num;
+    }
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat("ko-KR").format(num);
+    }
+
+    function updateTeamSummary(teamValue, summaryKdaId, summaryGoldId) {
+        const teamSelects = Array.from(document.querySelectorAll('select[name$="player_team"]'));
+        let totalK = 0;
+        let totalD = 0;
+        let totalA = 0;
+        let totalGold = 0;
+
+        teamSelects.forEach((teamSelect) => {
+            if (String(teamSelect.value) !== String(teamValue)) {
+                return;
+            }
+
+            const name = teamSelect.name;
+            const prefix = name.replace("player_team", "");
+
+            const kdaInput = document.querySelector(`input[name="${prefix}player_kda"]`);
+            const goldInput = document.querySelector(`input[name="${prefix}player_gold"]`);
+
+            const kda = parseKDA(kdaInput ? kdaInput.value : "");
+            const gold = parseGold(goldInput ? goldInput.value : "");
+
+            totalK += kda.k;
+            totalD += kda.d;
+            totalA += kda.a;
+            totalGold += gold;
+        });
+
+        document.getElementById(summaryKdaId).textContent = `${totalK} / ${totalD} / ${totalA}`;
+        document.getElementById(summaryGoldId).textContent = formatNumber(totalGold);
+    }
+
+    function updateAllTeamSummaries() {
+        updateTeamSummary(1, "team1-kda-summary", "team1-gold-summary");
+        updateTeamSummary(2, "team2-kda-summary", "team2-gold-summary");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('input[name$="player_kda"], input[name$="player_gold"], select[name$="player_team"]').forEach((el) => {
+            el.addEventListener("input", updateAllTeamSummaries);
+            el.addEventListener("change", updateAllTeamSummaries);
+        });
+
+        updateAllTeamSummaries();
+
+        // 입력창 중앙 정렬
+        document.querySelectorAll('input[name$="player_kda"]').forEach((el) => el.classList.add("kda-input"));
+        document.querySelectorAll('input[name$="player_gold"]').forEach((el) => el.classList.add("gold-input"));
+    });
+</script>
+{% endblock %}
