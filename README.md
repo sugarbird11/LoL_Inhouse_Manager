@@ -17,18 +17,15 @@
 
 ### Windows
 ```cmd
-python -m venv venv
-venv\Scripts\activate.bat
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+git clone https://github.com/sugarbird11/LoL_Inhouse_Manager
+cd LoL_Inhouse_Manager
+run_windows.cmd
 ```
 
 ### macOS
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+git clone https://github.com/sugarbird11/LoL_Inhouse_Manager
+cd LoL_Inhouse_Manager
+chmod +x run_mac.sh
+./run_mac.sh
 ```
