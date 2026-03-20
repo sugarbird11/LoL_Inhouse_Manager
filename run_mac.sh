@@ -4,7 +4,7 @@ set -e
 # LoL Inhouse Manager macOS 실행 스크립트
 # 사용법: 프로젝트 루트( manage.py 있는 위치 )에서 실행
 
-if [ ! -f "manage.py" ]; then
+if [ ! -f "project/manage.py" ]; then
   echo "[ERROR] manage.py 파일이 현재 폴더에 없습니다."
   echo "프로젝트 루트 폴더에서 다시 실행하세요."
   exit 1
@@ -26,8 +26,8 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
 fi
 
 echo "[INFO] 데이터베이스 migration을 진행합니다..."
-python manage.py migrate
+python project/manage.py migrate
 
 echo "[INFO] 서버를 실행합니다..."
 echo "[INFO] 브라우저에서 http://127.0.0.1:8000/ 로 접속하세요."
-python manage.py runserver
+python project/manage.py runserver
