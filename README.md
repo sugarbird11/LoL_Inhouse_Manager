@@ -19,6 +19,7 @@
 git clone https://github.com/sugarbird11/LoL_Inhouse_Manager
 cd LoL_Inhouse_Manager
 run_windows.cmd
+
 ```
 
 ### macOS
@@ -27,4 +28,5 @@ git clone https://github.com/sugarbird11/LoL_Inhouse_Manager
 cd LoL_Inhouse_Manager
 chmod +x run_mac.sh
 ./run_mac.sh
+
 ```
