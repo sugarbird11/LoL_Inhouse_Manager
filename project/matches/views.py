@@ -219,6 +219,9 @@ def match_upload_view(request):
             except ValueError as error:
                 messages.error(request, str(error))
                 return _render_upload_page(request, match_form, detail_formset, ocr_text="")
+            except Exception:
+                messages.error(request, "경기 결과 저장 중 오류가 발생했습니다. DB에는 반영되지 않았습니다.")
+                return _render_upload_page(request, match_form, detail_formset, ocr_text="")
 
         return _render_upload_page(request, match_form, detail_formset, ocr_text="")
 
