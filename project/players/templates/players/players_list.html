@@ -20,8 +20,34 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>소환사명</th>
-                        <th>파워 스코어</th>
+                        <th>
+                            <a href="{% url 'players:player_list' %}?sort_by=player_id&direction={{ next_name_direction }}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                                <span>소환사명</span>
+                                {% if current_sort_by == "player_id" %}
+                                    {% if current_direction == "asc" %}
+                                        <span>↑</span>
+                                    {% else %}
+                                        <span>↓</span>
+                                    {% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+
+                        <th>
+                            <a href="{% url 'players:player_list' %}?sort_by=player_power_score&direction={{ next_ps_direction }}"
+                               class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                                <span>파워 스코어</span>
+                                {% if current_sort_by == "player_power_score" %}
+                                    {% if current_direction == "asc" %}
+                                        <span>↑</span>
+                                    {% else %}
+                                        <span>↓</span>
+                                    {% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+
                         <th>주 포지션</th>
                         <th>부 포지션</th>
                         <th class="text-end">기능</th>
