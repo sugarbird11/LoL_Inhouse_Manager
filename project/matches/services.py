@@ -121,11 +121,42 @@ def auto_fill_match_result_from_image(image_path: str, initial_details: list[dic
 
     return output_rows[:10]
 
+@transaction.atomic
 def save_match_with_details(match_form, detail_forms, temp_screenshot_path=None):
     """
     경기 정보와 플레이어 상세 10명을 저장하고,
-    Player의 승/패 기록도 갱신한다.
+    승/패 및 PS를 반영한다.
+    중간에 오류가 나면 전부 롤백된다.
     """
+    detail_forms = list(detail_forms)
+
+    if len(detail_forms) != 10:
+        raise ValueError("플레이어 상세 정보는 정확히 10명이어야 합니다.")
+
+    used_player_ids = set()
+    team1_count = 0
+    team2_count = 0
+
+    # 먼저 저장 전 검증부터 수행
+    for form in detail_forms:
+        player = form.cleaned_data["player"]
+        player_team = int(form.cleaned_data["player_team"])
+
+        if player.key in used_player_ids:
+            raise ValueError(f"{player.player_id} 플레이어가 중복 입력되었습니다.")
+
+        used_player_ids.add(player.key)
+
+        if player_team == 1:
+            team1_count += 1
+        elif player_team == 2:
+            team2_count += 1
+        else:
+            raise ValueError("플레이어 팀 정보가 올바르지 않습니다.")
+
+    if team1_count != 5 or team2_count != 5:
+        raise ValueError("팀 1과 팀 2는 각각 정확히 5명이어야 합니다.")
+
     screenshot_file = match_form.cleaned_data.get("screenshot")
 
     match = Match.objects.create(
@@ -133,28 +164,23 @@ def save_match_with_details(match_form, detail_forms, temp_screenshot_path=None)
         win_team=int(match_form.cleaned_data["win_team"]),
     )
 
+    # 스크린샷 저장
     if screenshot_file:
         match.screenshot = screenshot_file
         match.save()
     elif temp_screenshot_path:
-        absolute_path = os.path.join(settings.MEDIA_ROOT, temp_screenshot_path)
+        absolute_path = os.path.join(str(settings.MEDIA_ROOT), temp_screenshot_path)
         if os.path.exists(absolute_path):
             with open(absolute_path, "rb") as fp:
                 match.screenshot.save(os.path.basename(temp_screenshot_path), File(fp), save=True)
 
-    used_player_ids = set()
-
+    # 상세 저장 + 승패 반영
     for form in detail_forms:
         player = form.cleaned_data["player"]
         player_team = int(form.cleaned_data["player_team"])
         player_kda = form.cleaned_data.get("player_kda", "")
         player_selected_lane = form.cleaned_data["player_selected_lane"]
         player_gold = form.cleaned_data.get("player_gold") or 0
-
-        if player.key in used_player_ids:
-            raise ValueError(f"{player.player_id} 플레이어가 중복 입력되었습니다.")
-
-        used_player_ids.add(player.key)
 
         MatchPlayerDetail.objects.create(
             match=match,
@@ -170,9 +196,9 @@ def save_match_with_details(match_form, detail_forms, temp_screenshot_path=None)
         else:
             player.player_lose += 1
 
-        player.save()
+        player.save(update_fields=["player_win", "player_lose"])
 
-    from ratings.services import apply_ratings_for_match
+    # PS 반영
     apply_ratings_for_match(match)
 
     return match
