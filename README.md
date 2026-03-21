@@ -1,4 +1,4 @@
-# LoL Inhouse Manager (v0.1.0)
+# LoL Inhouse Manager (v0.1.1)
 
 리그 오브 레전드 자동 팀 배정 프로그램입니다.
 
