@@ -2,7 +2,6 @@
 set -e
 
 # LoL Inhouse Manager macOS 실행 스크립트
-# 사용법: 프로젝트 루트( manage.py 있는 위치 )에서 실행
 
 if [ ! -f "project/manage.py" ]; then
   echo "[ERROR] This directory doesn't have manage.py"
