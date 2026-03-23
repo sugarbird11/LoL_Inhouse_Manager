@@ -2,7 +2,6 @@
 setlocal
 
 REM LoL Inhouse Manager Windows 실행 스크립트
-REM 사용법: 프로젝트 루트( project\manage.py 있는 위치 )에서 실행
 
 if not exist "project\manage.py" (
     echo [ERROR] This directory doesn't have manage.py
